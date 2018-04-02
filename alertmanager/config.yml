@@ -1,0 +1,52 @@
+global:
+  smtp_from: 'prometheus_de@example.com'
+  smtp_smarthost: 'email.server.com'
+  smtp_auth_username: 'user'
+  smtp_auth_identity: 'id'
+  smtp_auth_password: 'pass'
+  smtp_require_tls: true
+
+route:
+  receiver: 'email'
+  group_by: [alertname]
+  group_wait: 30s
+  group_interval: 2m
+  repeat_interval: 3h
+  routes:
+    - receiver: 'slack_ops'
+      match_re:
+        instance: .*prod-jenkins.*
+      group_wait: 1s
+      group_interval: 2s
+      group_by: [alertname]
+
+    - receiver: 'slack_me'
+      match_re:
+        instance: .*alexf-jenkins.*
+      group_wait: 1s
+      group_interval: 2s
+      group_by: [alertname]
+
+receivers:
+  - name: 'email'
+    email_configs:
+    - to: 'alexf@example.com, mail@example.com'
+      send_resolved: true
+
+  - name: 'slack_ops'
+    slack_configs:
+    - send_resolved: true
+      username: 'Prometheus'
+      title: "{{ range .Alerts }} [{{ .Status | toUpper }}] {{ .Annotations.summary }}\n{{ end }}"
+      text: "{{ range .Alerts }}{{ .Annotations.description }}\n{{ end }}"
+      # ops channel url #your_channel
+      api_url: 'https://hooks.slack.com/services/T8T/B9X/MEf'
+
+  - name: 'slack_me'
+    slack_configs:
+    - send_resolved: true
+      username: 'Prometheus'
+      title: "{{ range .Alerts }} [{{ .Status | toUpper }}] {{ .Annotations.summary }}\n{{ end }}"
+      text: "{{ range .Alerts }}{{ .Annotations.description }}\n{{ end }}"
+      # private channel @AlexF
+      api_url: 'https://hooks.slack.com/services/T8T/B9X/fdM'

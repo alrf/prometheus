@@ -1,0 +1,13 @@
+groups:
+  - name: containers
+    rules:
+    - alert: test_jenkins_container_down
+      expr: absent(container_memory_usage_bytes{name="prod_jenkins",instance=~".*alexf-jenkins.*"})
+      for: 0s
+      labels:
+        severity: critical
+        instance: alexf-jenkins.example.com:9200
+#        notify: slack
+      annotations:
+        summary: "alexf-jenkins.example.com: container down"
+        description: "alexf-jenkins.example.com: prod_jenkins container is down for more than 5 seconds."
